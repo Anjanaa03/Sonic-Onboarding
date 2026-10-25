@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sonic onboarding prototype</title>
+<style>
+:root{--p:#6C4CF5;--pd:#5636D8;--pl:#F1EDFF;--pll:#F8F6FF;--ink:#1F1B2E;--mut:#55516B;--line:#DAD4EE;--warn:#B86E00;--warnbg:#FFF6E5;--err:#D1344A;--errbg:#FFF0F2}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari","Noto Sans Tamil","Noto Sans Telugu",sans-serif;color:var(--ink);background:radial-gradient(900px 500px at 50% -10%,#E9E2FF,#fff 65%);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,select{font:inherit;color:inherit}
+.stage{min-height:100%;display:flex;flex-direction:column;align-items:center;padding:10px 0 14px}
+.pbar{position:sticky;top:0;z-index:100;width:100%;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-bottom:10px;padding:8px;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.pbar .seg{display:flex;background:#fff;border:1px solid var(--line);border-radius:99px;padding:2px}
+.pbar .seg button{padding:5px 11px;border-radius:99px;font-size:12px;color:var(--mut)}
+.pbar .seg button.on{background:var(--p);color:#fff}
+.pbar select,.pbar .rs{border:1px solid var(--line);background:#fff;border-radius:99px;padding:6px 10px;font-size:12px;color:var(--ink)}
+.frame{position:relative;width:393px;height:852px;flex:none;background:#fff;border-radius:54px;border:9px solid #17142A;box-shadow:0 30px 70px rgba(60,40,140,.22),0 4px 14px rgba(20,10,60,.12);overflow:hidden}
+@media(max-width:480px){.sbar{display:none}#app{inset:0}.stage{padding:0}.frame{width:100%;height:calc(100dvh - 46px);border:0;border-radius:0;box-shadow:none;zoom:1!important}}
+#app{position:absolute;inset:48px 0 0 0;display:flex;flex-direction:column}
+.sbar{position:absolute;top:0;left:0;right:0;height:48px;z-index:15;display:flex;justify-content:space-between;align-items:center;padding:10px 30px 0 34px;background:#fff;font-weight:700;font-size:16px;color:#1F1B2E}
+.sbar .isl{position:absolute;left:50%;top:10px;width:104px;height:30px;margin-left:-52px;border-radius:99px;background:#17142A}
+.sbar .sic{display:flex;align-items:center;gap:6px}.sbar svg{display:block}
+.top{padding:16px 20px 8px;flex:none}
+.trow{display:flex;align-items:center;gap:12px}
+.bk{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--pl);border:1.5px solid #C9BDFF;flex:none}
+.bk[disabled]{visibility:hidden}
+.trk{flex:1;height:6px;display:flex;gap:4px}.trk span{flex:1;background:var(--pl);border-radius:9px;overflow:hidden}
+.trk i{display:block;height:100%;background:linear-gradient(90deg,var(--p),#8D70FF);border-radius:9px;transition:width .4s}
+.stp{font-size:12.5px;font-weight:600;color:var(--pd);white-space:nowrap;min-width:78px;text-align:right}
+.body{flex:1;overflow-y:auto;padding:10px 22px 18px;scrollbar-width:none}
+.body::-webkit-scrollbar{display:none}
+.body.r{animation:inR .3s ease}.body.l{animation:inL .3s ease}
+@keyframes inR{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+@keyframes inL{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+.foot{flex:none;height:150px;padding:10px 22px 20px;display:flex;flex-direction:column;justify-content:flex-start;gap:6px;background:linear-gradient(#fff0,#fff 28%)}
+h1{font-size:26px;line-height:1.18;letter-spacing:-.5px;margin:8px 0 8px;font-weight:750}
+h2{font-size:15px;font-weight:700;margin-bottom:8px}
+.lead{color:var(--mut);font-size:16.5px;line-height:1.5;margin-bottom:14px}
+.sm{font-size:14.5px;color:var(--mut);line-height:1.45}
+.btn{width:100%;padding:15px 18px;border-radius:16px;background:var(--p);color:#fff;font-weight:650;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 16px rgba(108,76,245,.28);transition:transform .1s,background .2s}
+.btn:active{transform:scale(.98)}
+.btn[disabled]{background:#D9D3F0;box-shadow:none;cursor:not-allowed;color:#fff}
+.btn.sec{background:var(--pl);color:var(--pd);box-shadow:none;border:1.5px solid #C9BDFF}
+.btn.gh{background:none;color:var(--pd);box-shadow:none;padding:10px;font-weight:650;font-size:15.5px}
+.foot>.btn:not(.gh):not(.sm2){padding:20px 18px;font-size:19px;border-radius:22px}.foot>.btn.gh{font-size:17px;padding:14px}
+.btn.xl{padding:20px 18px;font-size:19px;border-radius:22px}.btn.gh.xl{font-size:17px;padding:14px}
+.btn.sm2{width:auto;padding:9px 14px;font-size:14px;border-radius:12px;box-shadow:none}
+.lnk{color:var(--pd);font-weight:600;font-size:14px;text-decoration:underline;text-underline-offset:3px}
+.card{background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:14px;margin-bottom:10px}
+.card.sel{border-color:var(--p);background:var(--pll);box-shadow:0 0 0 3px rgba(108,76,245,.1)}
+.card.dis{opacity:.5}
+.row{display:flex;gap:12px;align-items:flex-start}
+.ico{width:38px;height:38px;border-radius:12px;background:var(--pl);color:var(--p);display:grid;place-items:center;flex:none}
+.ico svg,.bk svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ct{font-weight:650;font-size:16.5px}
+.badge{display:inline-block;font-size:12.5px;font-weight:650;padding:3px 8px;border-radius:99px;background:var(--pl);color:var(--pd);margin-left:6px;vertical-align:1px}
+.badge.w{background:var(--warnbg);color:var(--warn)}.badge.g{background:#EEF0F4;color:var(--mut)}
+.note{display:flex;gap:10px;padding:13px;border-radius:14px;background:var(--pll);font-size:14.5px;line-height:1.45;color:var(--ink);margin:10px 0}
+.note.w{background:var(--warnbg)}.note.e{background:var(--errbg);color:#7B1626}
+.note svg{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;margin-top:1px;color:var(--p)}
+.note.w svg{color:var(--warn)}.note.e svg{color:var(--err)}
+.field{display:flex;gap:8px;margin-bottom:6px}
+.field input,.field select,.inp{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:14px;padding:14px;font-size:17px;background:#fff;outline:none;transition:border .2s,box-shadow .2s}
+.field select{flex:none;width:96px;padding:14px 6px}
+.field input:focus,.field select:focus,.inp:focus{border-color:var(--p);box-shadow:0 0 0 4px rgba(108,76,245,.12)}
+.inp.bad,.field.bad input{border-color:var(--err)}
+.err{color:var(--err);font-size:14.5px;min-height:18px;margin-bottom:8px}
+.lbl{font-size:13px;font-weight:650;color:var(--mut);margin:12px 0 6px;text-transform:uppercase;letter-spacing:.5px}
+/* hero */
+.hero{position:relative;height:296px;margin:0 0 6px}
+.ph{position:absolute;left:50%;top:0;transform:translateX(-50%);width:176px;height:244px;border-radius:30px;border:6px solid #2A2545;background:linear-gradient(#F1ECFF,#fff);overflow:hidden;box-shadow:0 14px 30px rgba(70,40,160,.2)}
+.ph:before{content:"";position:absolute;top:7px;left:50%;transform:translateX(-50%);width:50px;height:12px;background:#2A2545;border-radius:9px}
+.phin{padding:34px 12px;text-align:center}.phin b{display:block;font-size:19px;margin-top:2px}.phin span{font-size:11px;color:var(--mut)}
+.hc{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);width:262px;background:var(--p);color:#fff;border-radius:20px;padding:12px 14px;box-shadow:0 14px 30px rgba(108,76,245,.4)}
+.hc .h{display:flex;align-items:center;gap:8px;font-size:12px;opacity:.95;margin-bottom:6px}
+.hc .t{font-size:14px;line-height:1.35;margin-top:6px}
+.orb{width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#fff 0,#CFC3FF 28%,#8D70FF 62%,#5636D8);flex:none;position:relative}
+.orb.xl{width:84px;height:84px}.orb.lg{width:58px;height:58px}
+.orb.b{background:radial-gradient(circle at 30% 30%,#fff 0,#B8C4FF 25%,#4B5BE0 62%,#2A2F8F)}
+.wave{display:flex;gap:3px;align-items:center;height:22px}
+.wave i{display:block;width:3px;border-radius:3px;background:currentColor;opacity:.9;height:6px;animation:wv 1s ease-in-out infinite}
+.wave.off i{animation:none;height:5px;opacity:.35}
+@keyframes wv{0%,100%{height:5px}50%{height:20px}}
+.fc{position:absolute;background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 11px;font-size:11.5px;font-weight:650;box-shadow:0 6px 16px rgba(60,40,140,.12);animation:fl 4s ease-in-out infinite;white-space:nowrap}
+.fc.a{left:-4px;top:4px}.fc.b{right:-6px;top:142px;animation-delay:1s}
+.hero .ph{width:244px;height:262px;border-radius:38px;border-width:7px}.hero .ph:before{top:9px;width:70px;height:16px}
+.hero .phin{padding:50px 12px}.hero .phin b{font-size:25px;margin-top:4px}.hero .phin span{font-size:13.5px}
+.hero .hc{width:326px;border-radius:24px;padding:18px 20px}.hero .hc .h{font-size:14px;gap:10px;margin-bottom:10px}.hero .hc .h .orb{width:34px;height:34px}.hero .hc .wave{height:30px}.hero .hc .t{font-size:17px;margin-top:10px}
+.hero.half{height:215px;margin-top:0;overflow:hidden;width:100%}.hero.half .hc{bottom:14px}.hero.half .ph{-webkit-mask-image:linear-gradient(#000 45%,transparent 90%);mask-image:linear-gradient(#000 45%,transparent 90%)}
+.hero .fc{padding:9px 15px;font-size:13.5px}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+/* misc */
+.uses{list-style:none}.uses li{display:flex;gap:12px;align-items:center;padding:6px 0;font-size:16px;line-height:1.3}
+.nums{display:flex;align-items:center;gap:8px;margin:6px 0 10px}
+.nb{flex:1;border:1.5px solid var(--line);border-radius:14px;padding:10px;font-size:12px;color:var(--mut)}.nb b{display:block;color:var(--ink);font-size:14px;margin-top:2px}.nb.pu{border-color:var(--p);background:var(--pll)}
+.arr{color:var(--p);font-size:20px}
+.otpb{display:flex;gap:8px;justify-content:center;margin:14px 0 8px}
+.otpb input{width:48px;height:58px;text-align:center;font-size:24px;font-weight:700;border:1.5px solid var(--line);border-radius:14px;outline:none;padding:0}
+.otpb input:focus{border-color:var(--p);box-shadow:0 0 0 4px rgba(108,76,245,.12)}
+.otpb input.f{border-color:var(--p);background:var(--pll)}
+.otpb.bad input{border-color:var(--err);animation:shake .4s}
+.otpb.ok input{border-color:var(--p);background:var(--pl);color:var(--pd)}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.spin{width:18px;height:18px;border:2.5px solid var(--pl);border-top-color:var(--p);border-radius:50%;animation:sp .7s linear infinite;display:inline-block;vertical-align:-4px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.center{text-align:center}
+.gmock{position:relative;height:190px;border:5px solid #2A2545;border-radius:24px;background:#F4F3F8;overflow:hidden}
+.gf{position:absolute;inset:0;padding:12px;opacity:0;animation:gfr 9s infinite}.gf b{display:block;font-size:15px;margin-bottom:8px}
+@keyframes gfr{0%{opacity:0;transform:translateX(16px)}4%{opacity:1;transform:none}30%{opacity:1}34%{opacity:0}100%{opacity:0}}
+.gr{display:flex;justify-content:space-between;align-items:center;background:#fff;border-radius:10px;padding:11px 12px;margin-bottom:6px;font-size:14px;position:relative}.gr em{color:#B9B4CC;font-style:normal}
+.gr.h{outline:2px solid var(--p);background:var(--pll);font-weight:650}.gr.big{width:100%;text-align:left;font-size:17px;padding:16px 14px;background:#F4F3F8;margin-bottom:8px;border-radius:14px}.gr.big.h{background:var(--pll)}.gr.big .tap{right:36px}
+.tap{position:absolute;right:14px;top:50%;width:22px;height:22px;margin-top:-11px;border-radius:50%;background:rgba(108,76,245,.35);animation:tp 1s infinite}
+@keyframes tp{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.5);opacity:0}}
+.gtg{width:40px;height:24px;border-radius:99px;background:#D8D3EA;position:relative;animation:gton 9s infinite}.gtg:after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;animation:gkn 9s infinite}
+.gtg.off{animation:none}.gtg.off:after{animation:none}
+@keyframes gton{0%,78%{background:#D8D3EA}82%,100%{background:var(--p)}}@keyframes gkn{0%,78%{transform:none}82%,100%{transform:translateX(16px)}}
+.gcap{position:relative;height:26px;margin-top:10px;text-align:center}.gcap span{position:absolute;left:0;right:0;font-weight:650;font-size:14.5px;opacity:0;animation:gc 9s infinite}
+@keyframes gc{0%{opacity:0}4%{opacity:1}30%{opacity:1}34%{opacity:0}100%{opacity:0}}
+#demo.exit{animation:exUp .38s ease forwards}#demo.enter{animation:enUp .45s ease}
+@keyframes exUp{to{opacity:0;transform:translateY(-70px)}}@keyframes enUp{from{opacity:0;transform:translateY(70px)}}
+.tabbar{flex:none;display:flex;border-top:1px solid var(--line);padding:8px 10px 20px;background:#fff}.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;font-weight:650;color:var(--mut)}.tab svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.tab.on{color:var(--p)}
+.ctop{padding:16px 0 6px}.ctop h1{margin:0 0 2px;font-size:28px}
+.call{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);text-align:left;width:100%}.av{width:44px;height:44px;border-radius:50%;background:var(--pl);color:var(--pd);display:grid;place-items:center;font-weight:700;flex:none}
+.ctag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--pl);color:var(--pd)}.ctag.s{background:#EEF0F4;color:var(--mut)}.ctag.d{background:var(--warnbg);color:var(--warn)}
+.prow{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.subh{display:flex;align-items:center;gap:12px;padding:14px 0 4px;font-size:18px}
+.card{position:relative}.card>.ck{position:absolute;left:-9px;top:-9px;width:24px;height:24px;border-radius:50%;background:var(--p);display:grid;place-items:center;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(108,76,245,.4)}.card>.ck svg{width:14px;height:14px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.lrow{display:flex;align-items:center;flex-wrap:wrap;margin-bottom:4px}.lrow .pill{margin-bottom:0}.lrow .pen{margin-left:auto}
+.mid{display:flex;flex-direction:column;text-align:center;padding-top:96px}.mid .phl{justify-content:center}.mid .field input{text-align:center;font-size:23px;padding:18px 14px}.mid .field select{text-align:left;font-size:23px;width:124px;padding:18px 8px;font-weight:400}
+.lock{background:linear-gradient(160deg,#EEE8FF,#D8CEFF);border-radius:24px;padding:20px 14px 16px;text-align:center;margin:4px 0 12px}.lock .tm{font-size:46px;font-weight:300;color:#3B2F80;line-height:1}.lock{min-height:270px;animation:buzz 6s infinite}.lock .pn{animation:ntf 6s infinite}.lock .pa button:last-child{animation:pb 6s infinite}
+@keyframes ntf{0%,6%{transform:translateY(-140%) scale(.96);opacity:0}12%{transform:translateY(8px) scale(1);opacity:1}15%{transform:translateY(-3px)}18%,88%{transform:none;opacity:1}95%,100%{transform:translateY(-24px);opacity:0}}
+@keyframes buzz{0%,10%,16%,100%{transform:none}11%{transform:translateX(-3px)}12%{transform:translateX(3px)}13%{transform:translateX(-2px)}14%{transform:translateX(2px)}15%{transform:translateX(-1px)}}
+@keyframes pb{0%,38%{box-shadow:0 0 0 0 rgba(108,76,245,0)}48%{box-shadow:0 0 0 7px rgba(108,76,245,.25)}58%,100%{box-shadow:0 0 0 0 rgba(108,76,245,0)}}
+.lock .ld{font-size:13px;color:#5B4FA0;margin:4px 0 18px}
+.pa{display:flex;gap:8px;margin-top:10px}.pa button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:12px;background:var(--pl);color:var(--pd);font-weight:650;font-size:15px;border:1.5px solid #C9BDFF}.pa svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.phl{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:19px}
+.pen{width:34px;height:34px;border-radius:50%;background:var(--pl);color:var(--pd);display:grid;place-items:center;border:1.5px solid #C9BDFF}.pen svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pn{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px;box-shadow:0 10px 24px rgba(60,40,140,.1);margin:10px 0}
+.pn .h{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);margin-bottom:6px}
+.pn .h .orb{width:18px;height:18px}.pn b{display:block;font-size:16px}.pn span{font-size:15.5px;color:var(--ink)}
+.tg{width:48px;height:28px;border-radius:99px;background:#D8D3EA;position:relative;flex:none;transition:background .2s}
+.tg:after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
+.tg.on{background:var(--p)}.tg.on:after{transform:translateX(20px)}
+.tr{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.tr:last-child{border:0}
+.sec-h{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--pd);margin:14px 0 8px}
+.sec-h i{width:20px;height:20px;border-radius:50%;background:var(--p);color:#fff;display:grid;place-items:center;font-style:normal;font-size:11px}
+.rad{width:22px;height:22px;border-radius:50%;border:2px solid #C9C3DD;flex:none;display:grid;place-items:center;margin-top:1px}
+.card.sel .rad{border-color:var(--p)}.card.sel .rad:after{content:"";width:11px;height:11px;border-radius:50%;background:var(--p)}
+.langs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lgb{border:1.5px solid var(--line);border-radius:16px;padding:12px;display:flex;align-items:center;gap:10px;text-align:left;position:relative;transition:all .15s}
+.lgb b{font-size:20px;width:30px;text-align:center;color:var(--pd)}
+.lgb span{font-size:15.5px;font-weight:600}
+.lgb.on{border-color:var(--p);background:var(--pll)}
+.lgb.on:after{content:"✓";position:absolute;right:10px;top:8px;font-size:12px;color:#fff;background:var(--p);width:18px;height:18px;border-radius:50%;display:grid;place-items:center}
+.lgb.off{opacity:.45}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:99px;background:var(--pl);color:var(--pd);font-size:14.5px;font-weight:600;margin:0 6px 6px 0}
+.pill.no{background:#EEF0F4;color:#45415A;text-decoration:line-through}
+.pill.ok2{background:var(--pl)}
+.cnt{display:flex;justify-content:space-between;align-items:center;margin:2px 0 10px;font-size:14.5px;color:var(--mut)}
+.cnt b{color:var(--pd);font-size:14px}
+.steps{counter-reset:s;list-style:none}
+.steps li{display:flex;gap:12px;padding:10px 0;font-size:14.5px;line-height:1.4}
+.steps li:before{counter-increment:s;content:counter(s);width:26px;height:26px;border-radius:50%;background:var(--pl);color:var(--pd);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.steps li small{display:block;color:var(--mut);font-size:13px;margin-top:2px}
+.acc{border:1px solid var(--line);border-radius:14px;margin-bottom:8px;overflow:hidden}
+.acc button{width:100%;text-align:left;padding:13px 14px;font-weight:650;font-size:15.5px;display:flex;justify-content:space-between}
+.acc div{display:none;padding:0 14px 12px;font-size:15px;color:var(--mut);line-height:1.5}
+.acc.o div{display:block}.acc.o button span{transform:rotate(90deg)}
+.num{display:flex;align-items:center;justify-content:space-between;background:var(--pll);border:1.5px dashed var(--p);border-radius:16px;padding:14px;margin:8px 0}
+.num b{font-size:21px;letter-spacing:.3px}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:15px;background:#17142A;color:#E9E4FF;border-radius:12px;padding:12px;word-break:break-all;margin:8px 0}
+.stepc{border:1.5px solid var(--line);border-radius:20px;padding:14px;margin-bottom:12px}
+.stepc.done{border-color:var(--p);background:var(--pll)}
+.sh{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+.sn{width:28px;height:28px;border-radius:50%;background:var(--p);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;flex:none}
+.stepc.done .sn:after{content:"✓"}.stepc.done .sn span{display:none}
+.sh b{font-size:16px}
+.stat{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:650;padding:5px 10px;border-radius:99px}
+.stat.ok{background:var(--pl);color:var(--pd)}.stat.wn{background:var(--warnbg);color:var(--warn)}.stat.no{background:#EEF0F4;color:var(--mut)}.stat.er{background:var(--errbg);color:var(--err)}
+.tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--mut);background:#EEF0F4;border-radius:6px;padding:2px 6px}
+/* overlays */
+#ov,#toast,#push{position:absolute;inset:0;pointer-events:none;z-index:20}
+#ov>*{pointer-events:auto}
+.scrim{position:absolute;inset:0;background:rgba(20,15,40,.5);display:grid;place-items:center;padding:24px;animation:fi .2s}
+@keyframes fi{from{opacity:0}}
+.dlg{width:100%;max-width:300px;text-align:center;overflow:hidden;animation:pop .22s}
+@keyframes pop{from{transform:scale(.92);opacity:0}}
+.dlg.ios{background:rgba(250,250,252,.96);border-radius:16px;color:#111}
+.dlg.ios .dt{padding:20px 16px 14px}.dlg.ios h3{font-size:16.5px;font-weight:650;line-height:1.3}.dlg.ios p{font-size:13px;margin-top:6px;color:#333;line-height:1.4}
+.dlg.ios .db{display:flex;flex-direction:column}.dlg.ios button{padding:13px;font-size:17px;color:#0A63F0;border-top:1px solid #D4D4D8}.dlg.ios button:last-child{font-weight:650}
+.dlg.android{background:#3C3F44;border-radius:28px;color:#E8EAF0;padding:22px 20px 20px}
+.dlg.android h3{font-size:19px;font-weight:500;line-height:1.3;margin:10px 0 8px}.dlg.android p{font-size:13.5px;color:#C4C7CF;line-height:1.45;margin-bottom:6px}
+.dlg.android button{display:block;width:100%;padding:13px;border-radius:99px;background:#C2CCFF;color:#1D2757;font-weight:600;font-size:15px;margin-top:8px}
+.dlg .sim{font-size:10.5px;opacity:.6;padding:6px 0 8px}
+.dlg.android .sim{padding:10px 0 0}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:88%;overflow-y:auto;background:#fff;border-radius:26px 26px 0 0;padding:10px 22px 24px;box-shadow:0 -10px 40px rgba(20,10,60,.25);animation:up .28s ease}
+.sheetbg{position:absolute;inset:0;background:rgba(20,15,40,.4);animation:fi .2s}
+.sheet:before{content:"";display:block;width:40px;height:4px;border-radius:9px;background:#D8D3EA;margin:0 auto 14px}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+#toast{display:flex;align-items:flex-end;justify-content:center;padding-bottom:96px}
+.tst{background:#1F1B2E;color:#fff;padding:10px 16px;border-radius:99px;font-size:13.5px;animation:pop .2s;max-width:86%;text-align:center}
+#push{z-index:30}
+.pushc{position:absolute;left:10px;right:10px;top:10px;background:rgba(255,255,255,.97);border:1px solid var(--line);border-radius:20px;padding:12px;box-shadow:0 14px 34px rgba(40,20,100,.3);pointer-events:auto;animation:dn .45s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes dn{from{transform:translateY(-120%)}}
+.pushc .h{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);margin-bottom:4px}.pushc .h .orb{width:18px;height:18px}.pushc b{display:block;font-size:14.5px}
+.sms{margin:8px 0;background:#2B2B30;color:#fff;border-radius:16px;padding:10px 12px;font-size:13px;animation:dn .4s}
+.sms small{display:block;opacity:.65;font-size:11.5px;margin-bottom:2px}
+/* dialer */
+.dial{position:absolute;inset:0;background:#fff;z-index:25;display:flex;flex-direction:column;animation:up .3s}
+.dial .dh{padding:14px 18px;display:flex;justify-content:space-between;align-items:center;background:var(--pll)}
+.dial .disp{flex:none;min-height:92px;padding:18px;text-align:center;font-size:29px;font-weight:600;word-break:break-all;letter-spacing:.5px;display:flex;align-items:center;justify-content:center;position:relative;cursor:text}.pmenu{position:absolute;top:6px;left:50%;transform:translateX(-50%);background:#2B2B30;color:#fff;border-radius:10px;padding:9px 22px;font-size:16px;font-weight:600;box-shadow:0 6px 16px rgba(0,0,0,.3);animation:pop .15s}.pmenu:after{content:"";position:absolute;left:50%;bottom:-6px;margin-left:-7px;border:7px solid transparent;border-bottom:0;border-top-color:#2B2B30}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 18px;padding:6px 36px;margin:auto 0}
+.kp button{height:58px;border-radius:50%;background:#F2F1F6;font-size:25px;font-weight:500;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.kp button small{font-size:9px;letter-spacing:1.5px;color:var(--mut);margin-top:2px;height:9px}
+.dial .acts{display:flex;justify-content:center;align-items:center;gap:26px;padding:6px 20px 22px}
+.callb{width:64px;height:64px;border-radius:50%;background:#2DB36B;color:#fff;display:grid;place-items:center}
+.callb.pulse{animation:cp 1.3s infinite}@keyframes cp{0%{box-shadow:0 0 0 0 rgba(45,179,107,.55)}100%{box-shadow:0 0 0 18px rgba(45,179,107,0)}}
+.callb svg{width:28px;height:28px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.sim-t{font-size:13px;color:var(--mut);text-align:center}
+/* chat */
+.msgs{display:flex;flex-direction:column;gap:8px;margin:8px 0}
+.m{max-width:84%;padding:11px 14px;border-radius:18px;font-size:15.5px;line-height:1.4;animation:pop .2s}
+.m.u{align-self:flex-end;background:var(--p);color:#fff;border-bottom-right-radius:6px}
+.m.s{align-self:flex-start;background:var(--pl);border-bottom-left-radius:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{border:1.5px solid #C9BDFF;border-radius:99px;padding:9px 14px;font-size:14.5px;font-weight:550;text-align:left;background:#fff}
+.chip:active{background:var(--pl)}
+.chat-in{display:flex;gap:8px;align-items:center}
+.chat-in .inp{font-size:15px;padding:12px 14px}
+.rb{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--pl);color:var(--pd);flex:none;border:1.5px solid #C9BDFF}
+.rb.pr{background:var(--p);color:#fff}
+.rb svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.typing i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--p);margin-right:3px;animation:bl 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bl{50%{opacity:.25}}
+.vc{display:flex;gap:12px;align-items:center}
+.vc .orb{flex:none}
+.pl2{width:46px;height:46px;border-radius:50%;background:var(--p);color:#fff;display:grid;place-items:center;flex:none}
+.pl2 svg{width:20px;height:20px;fill:#fff;stroke:#fff;stroke-width:1}
+.sumr{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px;align-items:center}
+.sumr:last-child{border:0}.sumr span:first-child{color:var(--mut)}
+.sumr b{text-align:right;font-weight:650;max-width:62%}
+.big{width:96px;height:96px;border-radius:50%;background:var(--pl);display:grid;place-items:center;margin:8px auto 14px;position:relative}
+.big svg{width:46px;height:46px;stroke:var(--p);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.big:before,.big:after{content:"";position:absolute;inset:-10px;border-radius:50%;border:2px solid var(--pl);animation:rg 2.4s ease-out infinite}.big:after{animation-delay:1.2s}
+@keyframes rg{from{transform:scale(.85);opacity:1}to{transform:scale(1.25);opacity:0}}
+.mini{border:5px solid #2A2545;border-radius:22px;background:#fff;padding:10px;font-size:14px;margin:8px 0;overflow:hidden;height:210px;display:flex;flex-direction:column;justify-content:center}
+.mini .r{padding:8px 10px;border-radius:8px;margin:3px 0;background:#F4F3F8;display:flex;justify-content:space-between}
+.mini .r.h{background:var(--pl);outline:2px solid var(--p);font-weight:650}
+.tabs{display:flex;gap:6px;margin-bottom:8px}.tabs button{flex:1;padding:13px 6px;border-radius:12px;background:#F2F1F6;font-size:16px;font-weight:650}.tabs button.on{background:var(--p);color:#fff}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="pbar">
+    <span>Prototype view:</span>
+    <div class="seg" id="plat"><button data-p="ios">iPhone</button><button data-p="android">Android</button></div>
+    <select id="jump" aria-label="Jump to screen"></select>
+    <button class="rs" id="restart">Restart</button>
+    <button class="rs" id="expbtn" data-a="expire" style="display:none">Expire OTP</button>
+  </div>
+  <div class="frame">
+    <div class="sbar"><span>9:41</span><i class="isl"></i><span class="sic">
+      <svg width="18" height="12" viewBox="0 0 18 12" fill="#1F1B2E"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none" stroke="#1F1B2E" stroke-width="2" stroke-linecap="round"><path d="M1.5 4.2a10 10 0 0114 0"/><path d="M4 7a6.4 6.4 0 019 0"/><circle cx="8.5" cy="10" r="1" fill="#1F1B2E"/></svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x="0.5" y="0.5" width="22" height="12" rx="3.5" stroke="#1F1B2E" opacity=".45"/><rect x="2" y="2" width="19" height="9" rx="2.2" fill="#1F1B2E"/><rect x="24" y="4" width="2" height="5" rx="1" fill="#1F1B2E" opacity=".45"/></svg></span></div>
+    <div id="app"></div><div id="ov"></div><div id="toast"></div><div id="push"></div>
+  </div>
+</div>
+<script>
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const svg=n=>`<svg viewBox="0 0 24 24">${IC[n]||''}</svg>`;
+const IC={
+back:'<path d="M15 18l-6-6 6-6"/>',check:'<path d="M20 6L9 17l-5-5"/>',copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/>',
+bell:'<path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/>',
+users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.6a3.5 3.5 0 010 6.8M18.5 14a6.5 6.5 0 013 6"/>',
+phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/>',
+shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/>',
+send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+food:'<path d="M5 3v8a3 3 0 003 3v7M8 3v6M11 3v8a3 3 0 01-3 3M17 3c-2 2-3 5-3 8h3v10"/>',
+spam:'<circle cx="12" cy="12" r="9"/><path d="M5.7 5.7l12.6 12.6"/>',heart:'<path d="M12 21s-8-5-8-11a4.5 4.5 0 018-2.8A4.5 4.5 0 0120 10c0 6-8 11-8 11z"/>',
+x:'<path d="M18 6L6 18M6 6l12 12"/>',alert:'<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/>',
+vm:'<circle cx="7" cy="12" r="3.5"/><circle cx="17" cy="12" r="3.5"/><path d="M7 15.5h10"/>',sw:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+msg:'<path d="M21 12a8 8 0 01-11.6 7.1L3 21l1.9-5.4A8 8 0 1121 12z"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/>',moon:'<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>',lock:'<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>',power:'<path d="M12 3v9"/><path d="M6.4 6.4a8 8 0 1011.2 0"/>',edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>',chev:'<path d="M9 6l6 6-6 6"/>',pause:'<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>',play:'<path d="M7 4l13 8-13 8z"/>',
+spk:'<path d="M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11"/>',home:'<path d="M3 11l9-8 9 8v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/>'
+};
+const toast=(m)=>{const t=$('#toast');t.innerHTML=`<div class="tst">${esc(m)}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>t.innerHTML='',2200)};
+const copyText=async(txt)=>{try{await navigator.clipboard.writeText(txt);return true}catch(e){try{const a=document.createElement('textarea');a.value=txt;a.style.position='fixed';a.style.opacity=0;document.body.appendChild(a);a.select();const ok=document.execCommand('copy');a.remove();return ok}catch(_){return false}}};
+
+/* ---------- state ---------- */
+const KEY='sonic_onb_v2',SONIC_NUM='+91 98765 43210',SONIC_RAW='+919876543210',TOTAL=12;
+const OTP_OK='482913';
+const detect=()=>/android/i.test(navigator.userAgent)?'android':'ios';
+const DEF=()=>({step:0,platform:detect(),cc:'+91',phone:'',verifiedFor:'',otpOk:false,notif:null,perm:{contacts:null,ident:null},permWarn:false,name:'',mode:null,
+ promo:{credit:true,loan:true,rent:true,job:true,bank:true,other:true},langs:['en'],voice:null,voiceOk:false,pvLang:'en',vm:null,codeOverride:'',
+ dialed:null,fwdConfirmed:false,fwdVerified:false,fwdSkipped:false,home:false,aiOn:true,silent:false,wa:false,instr:'',incomplete:false,addr:{home:'',homeNote:'',office:'',officeNote:''},demoDone:false,finished:false});
+let S=(()=>{try{const j=JSON.parse(localStorage.getItem(KEY));if(j)return Object.assign(DEF(),j)}catch(e){}return DEF()})();
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const UI={dir:1,timers:[],otp:null,pv:{playing:null,note:'',simT:null},demo:{on:false,msgs:[],ended:false,typing:false,voice:false,t0:0,topics:[]},dial:{val:'',st:'idle',res:null},clip:'',home:{tab:'chats',page:null,chat:null,f:'All',hs:'idle'}};
+const later=(f,ms)=>{const t=setTimeout(f,ms);UI.timers.push(t);return t};
+const every=(f,ms)=>{const t=setInterval(f,ms);UI.timers.push(t);return t};
+const clearTimers=()=>{UI.timers.forEach(t=>{clearTimeout(t);clearInterval(t)});UI.timers=[];try{window.speechSynthesis&&speechSynthesis.cancel()}catch(e){}UI.pv.playing=null};
+
+/* ---------- data ---------- */
+const LANGS=[['en','E','English'],['hi','हि','Hindi'],['ta','த','Tamil'],['te','తె','Telugu'],['kn','ಕ','Kannada'],['ml','മ','Malayalam'],['bn','বা','Bengali'],['mr','म','Marathi'],['gu','ગુ','Gujarati'],['pa','ਪ','Punjabi']];
+const LN=Object.fromEntries(LANGS.map(l=>[l[0],l[2]]));
+const LTAG={en:'en-IN',hi:'hi-IN',ta:'ta-IN',te:'te-IN',kn:'kn-IN',ml:'ml-IN',bn:'bn-IN',mr:'mr-IN',gu:'gu-IN',pa:'pa-IN'};
+const PHRASE={en:"Hello, I'm Sonic, your AI assistant. How can I help you today?",hi:'नमस्ते, मैं सोनिक हूँ, आपका एआई असिस्टेंट। बताइए, मैं आपकी कैसे मदद करूँ?',ta:'வணக்கம், நான் சோனிக், உங்கள் AI உதவியாளர். நான் உங்களுக்கு எப்படி உதவலாம்?',te:'నమస్కారం, నేను సోనిక్, మీ AI సహాయకుడిని. నేను మీకు ఎలా సహాయం చేయగలను?',kn:'ನಮಸ್ಕಾರ, ನಾನು ಸೋನಿಕ್, ನಿಮ್ಮ AI ಸಹಾಯಕ. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?',ml:'നമസ്കാരം, ഞാൻ സോണിക്, നിങ്ങളുടെ AI സഹായി. എനിക്ക് നിങ്ങളെ എങ്ങനെ സഹായിക്കാം?',bn:'নমস্কার, আমি সনিক, আপনার এআই সহকারী। আমি আপনাকে কীভাবে সাহায্য করতে পারি?',mr:'नमस्कार, मी सोनिक, तुमचा एआय सहाय्यक. मी तुम्हाला कशी मदत करू?',gu:'નમસ્તે, હું સોનિક છું, તમારો AI સહાયક. હું તમારી કેવી રીતે મદદ કરી શકું?',pa:'ਸਤ ਸ੍ਰੀ ਅਕਾਲ, ਮੈਂ ਸੋਨਿਕ ਹਾਂ, ਤੁਹਾਡਾ AI ਸਹਾਇਕ। ਮੈਂ ਤੁਹਾਡੀ ਕਿਵੇਂ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ?'};
+/* ASSUMPTION: voice x language support matrix is a placeholder until the voice team confirms */
+const VOICES={
+ ira:{id:'ira',name:'Ira',tag:'Warm and friendly',desc:'Approachable, conversational and reassuring.',sup:['en','hi','ta','te','kn','ml','bn','mr','gu','pa'],pitch:1.15,rate:.97,pref:/female|zira|heera|veena|swara|neerja|samantha|lekha|kalpana/i,cls:''},
+ dev:{id:'dev',name:'Dev',tag:'Calm and professional',desc:'Clear, composed and confident.',sup:['en','hi','ta','te','kn','ml','bn','mr'],pitch:.8,rate:.92,pref:/(?<!fe)male|ravi|hemant|prabhat|madhur|david|mark|rishi/i,cls:'b'}};
+const PROMO=[['credit','Credit cards','Offers for new cards and limits'],['loan','Loan offers','Personal and instant loan calls'],['rent','Real estate and rentals','Property, rental and broker calls'],['job','Job offers','Recruiter and hiring calls'],['bank','Bank calls','Banking offers and reminders, noted for you'],['other','Others','Anything else that sounds promotional']];
+const MODES={all:['All calls','Sonic answers all calls for you.'],
+ unknown:['Unknown numbers only','Sonic answers only numbers not saved in your contacts.'],
+ promo:['Spam and delivery calls','Sonic handles all sales and delivery calls for you.']};
+
+/* ---------- navigation ---------- */
+function go(n){S.home=false;n=Math.max(0,Math.min(TOTAL-1,n));UI.dir=n>=S.step?1:-1;while(STEPS[n].iosOnly&&!ios())n+=UI.dir;n=Math.max(0,Math.min(TOTAL-1,n));S.step=n;$('#ov').innerHTML='';$('#push').innerHTML='';render()}
+const btn=(l,a,c='',x='')=>`<button class="btn ${c}" data-a="${a}" ${x}>${l}</button>`;
+const fmtPhone=()=>S.cc==='+91'&&S.phone.length>5?`${S.phone.slice(0,5)} ${S.phone.slice(5)}`:S.phone;
+const maskPhone=()=>S.phone?`${S.cc} ${S.phone.slice(0,2)}XXX XXX${S.phone.slice(-2)}`:'Not added';
+const nm=()=>S.name?esc(S.name.split(' ')[0]):'there';
+const dialStr=()=>(S.codeOverride||(S.mode==='all'?'**21*':'**004*'))+SONIC_RAW+'#';
+const ios=()=>S.platform==='ios';
+
+/* ---------- views ---------- */
+const STEPS=[];
+STEPS.push({t:'Welcome',view(){return{body:`
+<div class="hero"><div class="ph"><div class="phin"><span>Incoming call</span><b>Unknown caller</b><span>+91 9XXXX XXXXX</span></div></div>
+<div class="hc"><div class="h"><span class="orb"></span>Sonic is answering</div><div class="wave" style="color:#fff">${Array.from({length:22},(_,i)=>`<i style="animation-delay:${(i*.07).toFixed(2)}s"></i>`).join('')}</div><div class="t">"Hi, I'm Sonic, an AI assistant. How can I help?"</div></div>
+<span class="fc a">Delivery guided</span><span class="fc b">Sales handled</span></div>
+<h1>Your calls. Your time. Your AI assistant.</h1>
+<p class="lead" style="margin-bottom:6px">Sonic answers calls for you.</p>
+<ul class="uses"><li><span class="ico">${svg('food')}</span>Delivery calls guided to your door.</li><li><span class="ico">${svg('spam')}</span>Sales and promo calls filtered out.</li><li><span class="ico">${svg('heart')}</span>Family messages saved for you.</li></ul>`,
+foot:btn('Get started','next','xl')+`<button class="btn gh xl" data-a="how">How it works</button>`}}});
+
+STEPS.push({t:'Your number',view(){return{body:`<div class="mid">
+<h1>What's your number?</h1>
+<p class="lead">Add the number where you receive calls. We'll verify it before setting up your assistant.</p>
+<div class="field" id="pf"><select id="cc" data-i="cc">${[['+91','IN +91'],['+1','US +1'],['+44','UK +44'],['+971','AE +971'],['+65','SG +65']].map(([v,l])=>`<option value="${v}" ${S.cc===v?'selected':''}>${l}</option>`).join('')}</select>
+<input id="ph" data-i="phone" inputmode="numeric" autocomplete="tel-national" placeholder="98765 43210" value="${esc(fmtPhone())}" aria-label="Mobile number"></div>
+<div class="err" id="perr"></div></div>
+`,
+foot:btn('Send verification code','phoneNext')}}});
+
+STEPS.push({t:'Verify',view(){
+ if(!S.otpOk&&!UI.otp)otpStart();
+ return{body:`<div class="mid"><h1>Let's verify it's you.</h1><p class="lead" style="margin-bottom:4px">We'll send a one-time code to</p>
+ <div class="phl"><b>${esc(S.cc+' '+fmtPhone())}</b><button class="pen" data-a="back" aria-label="Edit phone number">${svg('edit')}</button></div>
+ <div id="smsb"></div><div id="otp"></div></div>`,
+ foot:btn('Continue','next',S.otpOk?'':'','')+'' ,mount(){
+  if(S.otpOk){drawOtp();$('#foot .btn').disabled=false;return}
+  $('#foot .btn').disabled=true;drawOtp();schedAuto();
+  every(()=>{const o=UI.otp;if(!o||S.otpOk)return;if(o.st!=='expired'&&Date.now()>o.exp){o.st='expired';drawOtp()}const r=$('#rs');if(r)r.textContent=rsText()},1000)}}}});
+
+STEPS.push({t:'Notifications',view(){const n=S.notif;
+ const msg=n==='granted'?`<div class="note">${svg('check')}<span>Notifications are on. You'll get a short summary after each call.</span></div>`:n==='denied'?`<div class="note w">${svg('alert')}<span>Notifications are off. You can turn them on later in your phone's Settings under Notifications. Until then, check call summaries inside Sonic.</span></div>`:n==='later'?`<div class="note">${svg('info')}<span>No problem. We'll remind you once setup is done.</span></div>`:'';
+ return{body:`<h1>Stay in the loop, without picking up.</h1>
+ <p class="lead">Get a short summary after every call, with a quick way to reply or call back.</p>
+ <div class="lock"><div class="tm">9:41</div><div class="ld">Sunday, 25 October</div>
+ <div class="pn" style="text-align:left;margin:0"><div class="h"><span class="orb"></span>SONIC · now</div><b>Sonic handled a call</b><span>Rahul called to discuss tonight's plans.<br>You may want to call him back.</span>
+ <div class="pa"><button data-a="nReply">${svg('send')}Reply</button><button data-a="nCall">${svg('phone')}Call back</button></div></div></div>
+ ${msg}`,
+ foot:n?btn('Continue','next')+(n==='denied'?`<button class="btn gh" data-a="notifAsk">Ask again</button>`:''):btn('Enable notifications','notifAsk')+`<button class="btn gh" data-a="notifLater">Maybe later</button>`}}});
+
+STEPS.push({t:'Name',view(){return{body:`
+<div class="center" style="margin-top:6px"><div class="orb xl" style="margin:0 auto 6px"></div></div>
+<h1 class="center">First, what should I call you?</h1>
+<p class="lead center">Let's make this personal. Tell Sonic your name so your assistant experience feels more natural.</p>
+<input class="inp" id="nm" data-i="name" maxlength="40" placeholder="Your first name" autocomplete="given-name" value="${esc(S.name)}">
+<div class="err" id="nerr"></div>
+<div class="pn"><div class="h"><span class="orb"></span>Sonic will say</div><span id="nprev">Hi ${nm()}, I'm Sonic, your AI assistant.</span></div>`,
+foot:btn('Continue','nameNext')}}});
+
+STEPS.push({t:'Call handling',view(){return{body:`
+<h1>Choose how Sonic handles your calls.</h1>
+<div style="height:8px"></div>
+${Object.entries(MODES).map(([k,[t,d]])=>`<button class="card ${S.mode===k?'sel':''}" style="width:100%;text-align:left" data-a="mode" data-k="${k}"><div class="row" style="align-items:center"><span class="rad" style="margin-top:0"></span><div><div class="ct">${t}</div><p class="sm" style="margin-top:3px">${d}</p>${k==='promo'?`<p class="sm" style="margin-top:6px;color:var(--mut)">Customise your promotional calls in Settings.</p>`:''}</div></div></button>`).join('')}
+${S.permWarn?`<div class="note e">${svg('alert')}<span>Contacts access is needed so Sonic can tell known callers from strangers. Allow it to continue.</span></div>`:''}`,
+foot:btn('Continue','modeNext')}}});
+
+STEPS.push({t:'Languages',view(){return{body:`
+<h1>Which languages should I speak?</h1>
+<p class="lead">Choose up to three languages so Sonic can communicate more naturally with your callers.</p>
+<div class="cnt"><span>Tap to select or remove</span><b id="lcnt">${S.langs.length} of 3 selected</b></div>
+<div class="langs" id="lgs">${langsHtml()}</div>
+<div class="note">${svg('info')}<span>Voice support varies by language. You'll see what each voice supports on the next screen.</span></div>`,
+foot:btn('Continue','langNext',S.langs.length?'':'','')}}});
+
+STEPS.push({t:'Voice',view(){
+ if(!S.langs.includes(S.pvLang))S.pvLang=S.langs[0];
+ return{body:`<h1>Give Sonic a voice.</h1><p class="lead">Tap play to hear each voice, then pick one.</p>
+ <div class="lrow" id="pl">${S.langs.map(l=>`<button class="pill ${S.pvLang===l?'':'no'}" style="${S.pvLang===l?'background:var(--p);color:#fff':'text-decoration:none;background:#EEF0F4'}" data-a="pvLang" data-k="${l}">${LN[l]}</button>`).join('')}<button class="pen" data-a="gotoLang" aria-label="Edit languages">${svg('edit')}</button></div>
+ <div class="pn" style="margin-top:4px"><span id="phr" style="font-size:15px;line-height:1.5">${esc(PHRASE[S.pvLang])}</span></div>
+ <div id="pv"></div>`,
+ foot:btn('Choose this voice','pvOk'),mount(){drawPv()}}}});
+
+STEPS.push({t:'Voicemail',iosOnly:true,view(){return{mount(){A.tab({dataset:{t:0}})},body:iosHtml(),foot:btn('Done, continue','vmDone')+`<button class="btn gh" data-a="vmSkip">I couldn't turn it off</button>`}}});
+
+STEPS.push({t:'Forwarding',view(){
+ const ds=dialStr(),cap=S.mode==='all'?'Forwards all calls to Sonic':'Forwards missed and unreachable calls to Sonic';
+ return{body:`<h1>Connect your calls to Sonic.</h1><div style="height:8px"></div>
+ <div class="stepc ${UI.c1?'done':''}"><div class="sh"><span class="sn"><span>1</span></span><b>Copy this code</b></div>
+ <div class="code" id="dcode">${esc(ds)}</div>
+ <p class="sm" style="margin-bottom:10px">${cap}. Sonic's number is ${SONIC_NUM}.</p>
+ <button class="btn sec" data-a="copyCode">${svg('copy').replace('<svg','<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"')}${UI.c1?'Copied':'Copy code'}</button></div>
+ <div class="stepc ${S.dialed==='ok'?'done':''}"><div class="sh"><span class="sn"><span>2</span></span><b>Paste it in your dialer and call</b></div>
+ <button class="btn sec" data-a="openDial">${svg('phone').replace('<svg','<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"')}Open dialer</button>
+ ${S.dialed==='error'?`<p class="sm" style="margin-top:8px;color:var(--err)">The dialer didn't accept the code. Try again.</p>`:''}</div>
+ <div class="stepc ${S.fwdVerified?'done':''}"><div class="sh"><span class="sn"><span>3</span></span><b>Check it works</b></div>${confirmHtml()}</div>
+ <div class="center" style="font-size:17px"><button class="lnk" style="font-size:17px" data-a="help">Need help?</button> &nbsp;·&nbsp; <button class="lnk" style="font-size:17px" data-a="retry">Start over</button></div>`,
+ foot:S.fwdVerified?btn('Continue','next'):btn('Run test call','testCall')+`<button class="btn gh" data-a="fwdSkip">Skip for now</button>`}}});
+
+STEPS.push({t:'Demo',view(){return{body:`<div id="demo"></div>`,foot:'<div id="dfoot"></div>',mount(){Object.assign(UI.demo,{on:false,msgs:[],ended:false,typing:false,topics:[]});$('#push').innerHTML='';drawDemo();later(()=>A.demoStart(),1500)}}}});
+
+STEPS.push({t:'Ready',view(){return readyView()}});
+
+/* ---------- partials ---------- */
+function promoHtml(){return PROMO.map(([k,t,d])=>`<div class="tr"><div><div class="ct">${t}</div><div class="sm">${d}</div></div><button class="tg ${S.promo[k]?'on':''}" role="switch" aria-checked="${!!S.promo[k]}" aria-label="${t}" data-a="promo" data-k="${k}"></button></div>`).join('')}
+function langsHtml(){const full=S.langs.length>=3;return LANGS.map(([k,g,n])=>{const on=S.langs.includes(k);return `<button class="lgb ${on?'on':''} ${full&&!on?'off':''}" data-a="lang" data-k="${k}" aria-pressed="${on}"><b>${g}</b><span>${n}</span></button>`}).join('')}
+function iosHtml(){return `<h1>Turn off voicemail.</h1>
+<p class="lead">So unanswered calls reach Sonic, not your carrier's voicemail.</p>
+<div class="tabs" id="tb"><button class="on" data-a="tab" data-t="0">Check</button><button data-a="tab" data-t="1">Switch off</button><button data-a="tab" data-t="2">Return</button></div>
+<div id="tbc"></div>
+${acc("Can't find it?","Search Settings for 'voicemail', check your carrier's app, or ask your carrier to deactivate it.")}
+${acc("My carrier won't let me turn it off","Tap \"I couldn't turn it off\" below. You can still continue, but unanswered calls may reach voicemail instead of Sonic. We'll flag it at the end.")}
+${acc("How do I know it's off?","Call your number from another phone and don't answer. If you hear a voicemail greeting, it's still on.")}`}
+const acc=(t,b)=>`<div class="acc"><button data-a="acc">${t}<span>›</span></button><div>${b}</div></div>`;
+function confirmHtml(){
+ if(S.fwdVerified)return `<span class="stat ok">Verified by test call (simulated)</span>`;
+ return `<div id="tc"><p class="sm">After dialing, tap Run test call. Sonic will call your number to check.</p></div>`}
+
+/* ---------- OTP ---------- */
+function otpStart(){UI.otp={d:['','','','','',''],st:'idle',exp:Date.now()+120000,resend:Date.now()+30000,auto:true,sms:false}}
+const rsText=()=>{const s=Math.max(0,Math.ceil((UI.otp.resend-Date.now())/1000));return s?`Resend code in 0:${String(s).padStart(2,'0')}`:'Resend code'};
+function drawOtp(){const o=UI.otp,box=$('#otp');if(!box)return;
+ if(S.otpOk){box.innerHTML=`<div class="otpb ok">${OTP_OK.split('').map(c=>`<input value="${c}" disabled>`).join('')}</div><div class="center"><span class="stat ok">${svg('check').replace('<svg','<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"')}Verified (simulated)</span></div>`;return}
+ const msg=o.st==='loading'?`<span class="spin"></span>Checking code`:o.st==='error'?`<span style="color:var(--err)">That code isn't right. Try again.</span>`:o.st==='expired'?`<span style="color:var(--err)">This code expired. Request a new one.</span>`:`<span class="sm">Code expires in 2 minutes</span>`;
+ box.innerHTML=`<div class="otpb ${o.st==='error'?'bad':''}">${o.d.map((c,i)=>`<input data-o="${i}" inputmode="numeric" maxlength="1" autocomplete="${i?'off':'one-time-code'}" value="${c}" class="${c?'f':''}" ${o.st==='loading'||o.st==='expired'?'disabled':''}>`).join('')}</div>
+ <div class="center" style="min-height:22px;font-size:14px">${msg}</div>
+ <div class="center" style="margin-top:10px"><button class="lnk" id="rs" data-a="resend" ${o.resend>Date.now()||false?'':''}>${rsText()}</button></div>`;
+ $$('[data-o]',box).forEach(inp=>{const i=+inp.dataset.o;
+  inp.addEventListener('input',()=>{o.auto=false;const v=inp.value.replace(/\D/g,'');if(v.length>1){v.slice(0,6).split('').forEach((c,k)=>o.d[k]=c);drawOtp();checkOtp();return}o.d[i]=v;inp.value=v;inp.classList.toggle('f',!!v);if(v&&i<5)$(`[data-o="${i+1}"]`,box).focus();checkOtp()});
+  inp.addEventListener('keydown',e=>{if(e.key==='Backspace'&&!inp.value&&i>0){o.d[i-1]='';const p=$(`[data-o="${i-1}"]`,box);p.value='';p.classList.remove('f');p.focus()}});
+  inp.addEventListener('focus',()=>{if(o.st==='error'){o.st='idle';o.d=['','','','','',''];drawOtp();$('[data-o="0"]').focus()}})});
+}
+function checkOtp(){const o=UI.otp;if(o.d.every(Boolean)&&o.st!=='loading'){o.st='loading';drawOtp();later(()=>{if(Date.now()>o.exp){o.st='expired';drawOtp();return}
+ if(o.d.join('')===OTP_OK){S.otpOk=true;S.verifiedFor=S.cc+S.phone;save();drawOtp();const b=$('#foot .btn');if(b)b.disabled=false;$('#smsb').innerHTML=''}else{o.st='error';drawOtp()}},900)}}
+function schedAuto(){const o=UI.otp;o.auto=true;later(()=>{if(!o.auto||S.otpOk)return;$('#smsb').innerHTML=`<div class="sms"><small>MESSAGES · now (simulated)</small>${OTP_OK} is your Sonic verification code.</div>`;
+ let i=0;const t=every(()=>{if(!o.auto){clearInterval(t);return}o.d[i]=OTP_OK[i];i++;drawOtp();if(i>=6){clearInterval(t);checkOtp()}},220)},1800)}
+
+/* ---------- voice preview ---------- */
+function pickVoice(vid,lang){let vs=[];try{vs=speechSynthesis.getVoices()}catch(e){}const pre=LTAG[lang].slice(0,2).toLowerCase();let c=vs.filter(x=>x.lang.replace('_','-').toLowerCase().startsWith(pre));if(!c.length)return null;c.sort((a,b)=>(b.lang.toLowerCase().includes('-in')?1:0)-(a.lang.toLowerCase().includes('-in')?1:0));return c.find(x=>VOICES[vid].pref.test(x.name))||c[0]}
+function speakAs(vid,lang,text,onEnd,onFail){
+ if(!('speechSynthesis' in window)){onFail&&onFail('This browser has no speech support.');return}
+ const go_=(retry)=>{const v=pickVoice(vid,lang);if(!v){if(retry){later(()=>go_(false),400);return}onFail&&onFail(`No ${LN[lang]} voice is installed on this device.`);return}
+  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.voice=v;u.lang=v.lang;u.pitch=VOICES[vid].pitch;u.rate=VOICES[vid].rate;u.onend=()=>onEnd&&onEnd();u.onerror=()=>onEnd&&onEnd();speechSynthesis.speak(u)};go_(true)}
+function drawPv(){const el=$('#pv');if(!el)return;
+ el.innerHTML=Object.values(VOICES).map(v=>{const sup=v.sup.includes(S.pvLang),pl=UI.pv.playing===v.id;
+  const on=S.voice===v.id;
+  return `<div class="card ${on?'sel':''}" data-a="pickV" data-k="${v.id}" style="cursor:pointer">${on?`<span class="ck">${svg('check')}</span>`:''}<div class="vc"><span class="orb lg ${v.cls}" style="${on?'':'opacity:.5;filter:saturate(.5)'}"></span><div style="flex:1"><div class="ct">${v.name}<span class="badge">${v.tag}</span></div><div class="sm" style="margin-top:2px">${v.desc}</div>
+  ${pl?`<div class="wave" style="color:var(--p);margin-top:8px;width:90px">${Array.from({length:14},(_,i)=>`<i style="animation-delay:${(i*.08).toFixed(2)}s"></i>`).join('')}</div>`:''}
+  ${!sup?`<div class="sm" style="margin-top:4px">Not available in ${LN[S.pvLang]}</div>`:pl&&UI.pv.sim?`<div class="sm" style="margin-top:4px">Silent simulated preview</div>`:''}</div>
+  <button class="pl2" data-a="play" data-k="${v.id}" aria-label="${pl?'Stop':'Play'} ${v.name}" ${sup?'':'disabled style="opacity:.4"'}>${svg(pl?'pause':'play')}</button></div></div>`}).join('')+(UI.pv.note?`<div class="note w">${svg('alert')}<span>${esc(UI.pv.note)}</span></div>`:'')}
+function stopPv(){clearTimeout(UI.pv.simT);try{speechSynthesis.cancel()}catch(e){}UI.pv.playing=null;UI.pv.sim=false}
+function playPv(id){if(UI.pv.playing===id){stopPv();drawPv();return}stopPv();UI.pv.playing=id;UI.pv.note='';UI.pv.sim=false;S.voice=S.voice||id;drawPv();
+ const fin=()=>{if(UI.pv.playing===id){UI.pv.playing=null;UI.pv.sim=false;drawPv()}};
+ speakAs(id,S.pvLang,PHRASE[S.pvLang],fin,(why)=>{UI.pv.note=why+' This preview is a silent animation, not real audio.';UI.pv.sim=true;drawPv();UI.pv.simT=setTimeout(fin,3500)})}
+
+/* ---------- dialog, sheets, dialer ---------- */
+const DLG={notif:{ios:['"Sonic" Would Like to Send You Notifications','Notifications may include alerts, sounds and icon badges.','Allow',"Don't Allow"],android:['Allow Sonic to send you notifications?','','Allow',"Don't allow"]},
+ contacts:{ios:['"Sonic" Would Like to Access Your Contacts','Sonic uses your contacts to recognise friends and family when they call.','OK',"Don't Allow"],android:['Allow Sonic to access contacts?','Sonic will use your contacts to recognise known callers.','Allow',"Don't allow"]},
+ role:{ios:['Turn on unknown number detection','In Settings, switch on Sonic under Call Blocking and Identification. The path can differ by iOS version.',"I've turned it on",'Not now'],android:['Turn on unknown number detection?','Set Sonic as your caller ID and spam app so it can spot unknown numbers.','Turn on','Not now']}};
+function dialog(kind,cb){const [t,p,ok,no]=DLG[kind][S.platform];
+ $('#ov').innerHTML=`<div class="scrim"><div class="dlg ${S.platform}"><div class="dt">${S.platform==='android'?`<div style="color:#AFC0FF;display:grid;place-items:center">${svg(kind==='notif'?'bell':kind==='contacts'?'users':'shield').replace('<svg','<svg width="30" height="30" fill="none" stroke="currentColor" stroke-width="2"')}</div>`:''}<h3>${esc(t)}</h3>${p?`<p>${esc(p)}</p>`:''}</div>
+ <div class="db"><button data-d="1">${esc(ok)}</button><button data-d="0">${esc(no)}</button></div><div class="sim">Simulated system dialog</div></div></div>`;
+ $$('#ov [data-d]').forEach(b=>b.onclick=()=>{$('#ov').innerHTML='';cb(b.dataset.d==='1')})}
+function sheet(html){$('#ov').innerHTML=`<div class="sheetbg" data-a="closeOv"></div><div class="sheet">${html}<button class="btn gh xl" data-a="closeOv" style="margin-top:6px">Close</button></div>`}
+function guide(cb){const row=(t,h)=>`<div class="gr ${h?'h':''}"><span>${t}</span>${h?'<i class="tap"></i>':'<em>›</em>'}</div>`;
+ $('#ov').innerHTML=`<div class="sheetbg"></div><div class="sheet"><h2 style="font-size:19px;margin-bottom:10px">Turn on unknown number detection</h2>
+ <div class="gmock">
+  <div class="gf" style="animation-delay:0s"><b>Settings</b>${row('Notifications')}${row('Phone',1)}${row('Messages')}</div>
+  <div class="gf" style="animation-delay:3s"><b>Phone</b>${row('Announce Calls')}${row('Call Blocking and Identification',1)}${row('Silence Unknown Callers')}</div>
+  <div class="gf" style="animation-delay:6s"><b>Call Blocking</b><div class="gr h"><span>Sonic</span><div class="gtg"></div></div><div class="gr"><span>Another app</span><div class="gtg off"></div></div></div>
+ </div>
+ <div class="gcap"><span style="animation-delay:0s">1. Open Settings, then Phone</span><span style="animation-delay:3s">2. Tap Call Blocking and Identification</span><span style="animation-delay:6s">3. Switch Sonic on</span></div>
+ <p class="sm center" style="margin:6px 0 14px">Illustration. The path can differ by iOS version.</p>
+ <button class="btn" data-g="1">I've done it</button><button class="btn gh" data-g="0">Not now</button></div>`;
+ $$('#ov [data-g]').forEach(b=>b.onclick=()=>{$('#ov').innerHTML='';cb(b.dataset.g==='1')})}
+function openDialer(){UI.dial={val:'',st:'idle',res:null,menu:true};drawDialer()}
+function drawDialer(){const d=UI.dial;const keys=[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],['7','PQRS'],['8','TUV'],['9','WXYZ'],['*',''],['0','+'],['#','']];
+ $('#ov').innerHTML=`<div class="dial"><div class="dh"><span class="tag">Simulated dialer</span><button class="lnk" data-a="closeDial">Return to Sonic</button></div>
+ <div class="disp" id="dd" data-a="showPaste">${d.menu?'<button class="pmenu" data-a="paste">Paste</button>':''}${d.val?esc(d.val):'<span style="color:#9A96AE;font-weight:400;font-size:18px">Tap to paste or type the code</span>'}</div>
+ <div style="min-height:20px"></div>
+ <div class="kp">${keys.map(([k,s])=>`<button data-k="${k}">${k}<small>${s}</small></button>`).join('')}</div>
+ <div class="acts"><span style="width:64px"></span><button class="callb ${d.val?'pulse':''}" data-a="dialGo" aria-label="Call">${svg('phone')}</button><button class="rb" data-a="dialDel" aria-label="Delete" style="width:64px;background:none;color:var(--mut);font-size:22px">⌫</button></div>
+ <div class="sim-t" style="padding-bottom:10px">This is a practice dialer. Your phone isn't called.</div>
+ ${d.st==='calling'?`<div class="scrim"><div class="dlg ios"><div class="dt"><h3><span class="spin"></span>Dialing</h3><p>Sending code to the carrier (simulated)</p></div></div></div>`:''}
+ ${d.st==='result'?`<div class="scrim"><div class="dlg ${S.platform}"><div class="dt"><h3>${esc(d.res.t)}</h3><p>${esc(d.res.p)}</p></div><div class="db"><button data-a="dialOk">OK</button></div><div class="sim">Simulated carrier message</div></div></div>`:''}</div>`}
+function dialGo(){const d=UI.dial,v=d.val.replace(/\s/g,'');if(!v)return;d.st='calling';drawDialer();
+ later(()=>{const ds=dialStr(),alt=ds.replace('+91','91'),alt2=ds.replace('+91','');
+  if([ds,alt,alt2].includes(v)){S.dialed='ok';S.fwdConfirmed=true;S.fwdVerified=false;d.res={t:'Setting activated',p:'Forwarding to '+SONIC_NUM+' (simulated message).',ok:1}}
+  else{S.dialed='error';d.res={t:'Connection problem or invalid MMI code',p:'The code was not accepted. Check it and try again.',ok:0}}
+  d.st='result';save();drawDialer();if(d.res.ok)later(()=>A.dialOk(),1500)},1200)}
+
+/* ---------- demo ---------- */
+const STARTERS=["What if my family calls and it's urgent?","What happens when a delivery partner cannot find my house?","Will Sonic share my personal information?","How does Sonic handle spam calls?"];
+const KB=[
+ [/family|mom|dad|mother|father|urgent|emergency|friend|brother|sister|relative/,'family','Sonic will ask what the caller needs, assess whether the message sounds urgent, and help you understand what happened. It won\'t pretend to be you or share your private details.','urgent family calls','how it handles important messages'],
+ [/deliver|zomato|swiggy|food|house|find|address|rider|partner|order|gate|leave/,'delivery','Sonic can share the delivery instructions you\'ve provided and ask the caller for clarification if needed, rather than guessing. Can I guide you how to add your address?','delivery partners who can\'t find your home','how it guides them using your instructions'],
+ [/privacy|personal|share|information|data|private|secure|record|safe/,'privacy','Sonic only shares what you allow, like drop instructions for a delivery partner. Strangers and sales callers don\'t get your address, schedule or other personal details.','privacy','what Sonic shares and what stays private'],
+ [/spam|loan|credit|sales|promo|telemarket|bank|offer|scam/,'spam','Sonic spots promotional calls like loans and credit cards, politely declines, and notes them for you. You choose which categories it handles.','spam calls','how promotional calls are handled'],
+ [/pretend|human|robot|\bai\b|who are you|real person|impersonat/,'ai','I\'m Sonic, an AI assistant. I always say so to callers, and I never pretend to be you.','whether Sonic pretends to be you','that Sonic always identifies itself as an AI'],
+ [/miss|important|still get|lose|will i/,'miss','Calls that look important are flagged right away with a short summary and a suggestion to call back, so you don\'t miss what matters.','missing important calls','how important calls are flagged'],
+ [/cost|charge|bill|free|money|price|pay/,'cost','Forwarding charges depend on your carrier and plan, so check with them if unsure. We\'ll flag anything we know before you finish.','costs','that forwarding charges depend on your carrier'],
+ [/off|stop|disable|pause|cancel|undo|remove/,'off','You can pause Sonic any time. To remove forwarding, dial ##002# on most phones, or use your phone\'s call forwarding settings.','turning Sonic off','how to pause or remove forwarding'],
+ [/hello|^hi\b|hey|namaste/,'hi','Hi! Ask me anything about how I handle calls, or tap one of the examples.','hello','that you said hi']];
+function reply(q){const s=q.toLowerCase();for(const k of KB)if(k[0].test(s))return{r:k[2],id:k[1],a:k[3],b:k[4]};return{r:'Good question. I\'d ask the caller what they need, keep your details private, and send you a short summary. Try one of the examples below if you like.',id:'gen',a:'how Sonic would handle a call',b:'what Sonic does by default'}}
+function ask(q){q=q.trim();if(!q)return;const D=UI.demo;D.msgs.push({u:1,t:q});D.typing=true;D.ended=false;drawDemo();
+ later(()=>{const r=reply(q);D.typing=false;D.msgs.push({t:r.r,act:r.id==='delivery'});D.topics.push(r);if(D.voice)speakAs(S.voice||'ira','en',r.r);drawDemo()},800)}
+function drawDemo(){const el=$('#demo'),f=$('#dfoot'),D=UI.demo;if(!el)return;
+ if(!D.on){el.innerHTML=`<div class="mid" style="padding-top:70px"><div class="hero half"><div class="ph"><div class="phin"><span>Incoming call</span><b>Unknown caller</b><span>+91 9XXXX XXXXX</span></div></div>
+  <div class="hc"><div class="h"><span class="orb"></span>Sonic is answering</div><div class="wave" style="color:#fff">${Array.from({length:22},(_,i)=>`<i style="animation-delay:${(i*.07).toFixed(2)}s"></i>`).join('')}</div></div></div>
+  <h1 class="center">Meet your assistant.</h1><p class="lead center">Try a quick call and ask Sonic anything.</p></div>`;
+  f.innerHTML='';return}
+ const secs=Math.floor((Date.now()-D.t0)/1000);
+ el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div class="row" style="align-items:center"><span class="orb"></span><div><div class="ct">Sonic</div><div class="sm">${D.ended?'Call ended':'On a simulated call'}</div></div></div>
+ <div style="display:flex;gap:6px"><button class="rb" data-a="demoVoice" aria-label="Speak replies" style="width:38px;height:38px;${D.voice?'background:var(--p);color:#fff':''}">${svg('spk')}</button>${D.ended?'':`<button class="btn sm2" data-a="demoEnd" style="background:#D1344A;box-shadow:none">End</button>`}</div></div>
+ <div class="msgs" id="msgs">${D.msgs.map(m=>`<div class="m ${m.u?'u':'s'}">${esc(m.t)}${m.act&&!S.addr.home?`<div style="margin-top:8px"><button class="btn sm2" data-a="addr">Add my address</button></div>`:''}${m.act&&S.addr.home?'<div class="sm" style="margin-top:6px">Address saved.</div>':''}</div>`).join('')}${D.typing?'<div class="m s typing"><i></i><i></i><i></i></div>':''}</div>
+ ${D.ended?`<div class="card" style="border-color:var(--p);background:var(--pll)"><div class="ct">Call summary sent</div><p class="sm" style="margin-top:4px">${esc(summaryText())}</p></div>`:''}
+ <div class="chips">${STARTERS.filter(s=>!D.msgs.some(m=>m.t===s)).map(s=>`<button class="chip" data-a="starter" data-t="${esc(s)}">${esc(s)}</button>`).join('')}</div>`;
+ if(D.ended){f.innerHTML=btn('Finish onboarding','next')+`<div style="display:flex;gap:8px"><button class="btn gh" style="flex:1" data-a="demoMore">Try another question</button><button class="btn gh" style="flex:1" data-a="demoReset">Restart demo</button></div>`}
+ else f.innerHTML=`<div class="chat-in"><input class="inp" id="dq" placeholder="Type a concern or question" maxlength="140"><button class="rb" data-a="mic" aria-label="Speak">${svg('mic')}</button><button class="rb pr" data-a="dsend" aria-label="Send">${svg('send')}</button></div><button class="btn gh" data-a="next" style="margin-top:8px;font-size:18px;padding:12px">Continue</button>`;
+ const m=$('#body');if(m)m.scrollTop=m.scrollHeight;const q=$('#dq');if(q&&D.msgs.length>1&&!D.typing)q.focus()}
+function summaryText(){const t=UI.demo.topics;if(!t.length)return 'You tried the demo call. Sonic explained how it works.';const l=t[t.length-1];return `You asked about ${l.a}. Sonic explained ${l.b}.`}
+function pushNotif(){$('#push').innerHTML=`<div class="pushc"><div class="h"><span class="orb"></span>SONIC · now <span class="tag" style="margin-left:auto">Simulated</span></div><b>Sonic demo complete</b><span style="font-size:14px">${esc(summaryText())}</span></div>`;setTimeout(()=>{const p=$('#push');if(p)p.innerHTML=''},5000)}
+
+/* ---------- ready ---------- */
+function status(){const R=[];
+ const add=(ok,label,step)=>{if(!ok)R.push({label,step})};
+ add(S.otpOk,'Verify your phone number',1);add(S.name,'Add your name',4);add(S.mode,'Choose how Sonic handles calls',5);add(S.voiceOk,'Choose your assistant voice',7);
+ add(S.perm.contacts==='granted','Allow contacts access',5);
+ if(ios())add(S.vm==='done','Turn off voicemail',8);
+ add(S.fwdVerified,S.fwdConfirmed?'Verify call forwarding with a test call':'Set up and verify call forwarding',9);
+ return R}
+function readyView(){const R=status();
+ if(!R.length)return{body:`<div class="mid" style="padding-top:70px"><div class="big">${svg('check')}</div><h1>Setup complete.</h1><p class="lead">Use your AI voice assistant for calls.</p></div>`,foot:btn('Open Sonic','openHome')};
+ return{body:`<div class="big">${svg('alert')}</div><h1 class="center">${S.name?`Almost there, ${nm()}.`:'Almost there.'}</h1><p class="lead center">Finish these to turn Sonic on.</p>
+ <div class="card" style="border-color:#F2C77B;background:var(--warnbg)">${R.map(r=>`<div class="tr" style="padding:8px 0"><span class="sm" style="color:var(--ink)">${esc(r.label)}</span><button class="btn sm2 sec" data-a="goto" data-s="${r.step}">Fix</button></div>`).join('')}</div>`,
+ foot:btn('Fix the first step','fixFirst')+`<button class="btn gh" data-a="skipHome">Skip for now</button>`}}
+
+/* ---------- home (after setup): Calls + Profile ---------- */
+const FN=()=>(S.name||'there').split(' ')[0];
+const CALLS=()=>{const n=FN();return[
+ {id:1,t:'Family',who:'Rahul',time:'Today, 10:42',sum:"Asked if dinner at 8 works. Not urgent.",fu:'Call back when free.',m:[['c',`Hi, is ${n} there?`],['s',`Hi Rahul, I'm Sonic, ${n}'s AI assistant. They can't take the call right now. Can I pass on a message?`],['c',"Just checking if dinner at 8 works."],['s','Got it, dinner at 8. Is it urgent?'],['c','No, just let them know.'],['s',"I'll pass it on. Thanks, Rahul."]]},
+ {id:2,t:'Delivery',who:'Delivery partner',time:'Today, 9:15',sum:'Needed the gate. Guided to the security desk.',fu:'No action needed.',m:[['c',"Hello, I'm outside. Which gate should I come to?"],['s',"Hi, I'm Sonic, an AI assistant. Please leave the order with the security guard at the main gate."],['c','Okay, leaving it there.'],['s','Thank you!']]},
+ {id:3,t:'Spam',who:'Unknown number',time:'Yesterday, 6:30 pm',sum:'Loan offer. Declined politely.',fu:'No action needed.',m:[['c',"Sir, you are eligible for a pre-approved personal loan."],['s',`Hi, I'm Sonic, an AI assistant. Thanks, but ${n} isn't interested. Please remove this number from your list.`],['c','Okay, thank you.']]},
+ {id:4,t:'Family',who:'Mom',time:'Yesterday, 1:10 pm',sum:'Asked you to call when you are free.',fu:'Call back today.',m:[['c',`Hello beta, is ${n} busy?`],['s',`Hi, I'm Sonic, ${n}'s AI assistant. They can't pick up right now. Is it urgent?`],['c',"No, just ask them to call me."],['s',"I'll let them know right away."]]}]};
+const subh=t=>`<div class="subh"><button class="bk" data-a="hBack" aria-label="Back">${svg('back')}</button><b>${t}</b></div>`;
+const chev=svg('chev').replace('<svg','<svg width="18" height="18" fill="none" stroke="#9A96AE" stroke-width="2" stroke-linecap="round"');
+function chatsHtml(){const f=UI.home.f,list=CALLS().filter(c=>f==='All'||c.t===f);
+ return `<div class="ctop"><h1>Calls</h1><p class="sm">${S.aiOn?'Sonic is on':'Sonic is off'}</p></div>
+ <div style="margin:8px 0 4px">${['All','Family','Delivery','Spam'].map(k=>`<button class="pill ${f===k?'':'no'}" style="${f===k?'background:var(--p);color:#fff':'text-decoration:none;background:#EEF0F4'}" data-a="hFilter" data-k="${k}">${k}</button>`).join('')}</div>
+ ${list.map(c=>`<button class="call" data-a="hChat" data-k="${c.id}"><span class="av">${esc(c.who[0])}</span><div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(c.who)}</b><span class="sm" style="white-space:nowrap">${c.time}</span></div><div class="sm" style="margin:2px 0 6px;color:var(--ink)">${esc(c.sum)}</div><span class="ctag ${c.t[0].toLowerCase()}">${c.t}</span></div></button>`).join('')}`}
+function chatDetail(id){const c=CALLS().find(x=>x.id===id);
+ return `${subh(esc(c.who))}<div class="card sel" style="margin-top:6px"><div class="sm" style="font-weight:700;text-transform:uppercase;letter-spacing:.5px">Summary</div><p style="font-size:14.5px;margin:4px 0 6px">${esc(c.sum)}</p><p class="sm">${esc(c.fu)}</p></div>
+ <div class="msgs">${c.m.map(([w,t])=>`<div class="m ${w==='s'?'u':'s'}">${esc(t)}</div>`).join('')}</div>
+ <div class="pa"><button data-a="nReply">${svg('send')}Reply</button><button data-a="nCall">${svg('phone')}Call back</button></div>`}
+function profileHtml(){const inc=S.incomplete&&status().length;
+ const row=(ic,t,sub,pg)=>`<button class="prow" data-a="hOpen" data-k="${pg}"><span class="ico">${svg(ic)}</span><div style="flex:1"><div class="ct">${t}</div>${sub?`<div class="sm">${sub}</div>`:''}</div>${chev}</button>`;
+ const trow=(ic,t,sub,key)=>`<div class="prow"><span class="ico">${svg(ic)}</span><div style="flex:1"><div class="ct">${t}</div><div class="sm">${sub}</div></div><button class="tg ${S[key]?'on':''}" role="switch" aria-checked="${!!S[key]}" aria-label="${t}" data-a="hTog" data-k="${key}"></button></div>`;
+ return `<div class="ctop" style="display:flex;gap:14px;align-items:center"><span class="av" style="width:56px;height:56px;font-size:22px">${esc(FN()[0].toUpperCase())}</span><div><h1 style="font-size:22px">${esc(S.name||'You')}</h1><p class="sm">${S.otpOk?esc(maskPhone()):''}</p></div></div>
+ ${inc?`<div class="note w">${svg('alert')}<span>Setup isn't finished, so Sonic is off. <button class="lnk" data-a="fixFirst">Finish setup</button></span></div>`:''}
+ ${trow('power','Is the AI assistant on?',S.aiOn?'Sonic is answering your calls':'Calls ring as usual','aiOn')}
+ ${row('edit','Instructions','Tell Sonic how to handle calls','instr')}
+ ${row('shield','Assistant health check','Make sure everything works','health')}
+ ${trow('moon','Silent mode','Sonic answers without notifying you','silent')}
+ ${row('spk','Voice and language settings',(S.voice?VOICES[S.voice].name+', ':'')+S.langs.map(l=>LN[l]).join(', '),'voice')}
+ ${row('user','About me','Name and addresses','about')}
+ ${row('lock','Account data','Your number and data','account')}
+ ${trow('msg','WhatsApp updates','Get call summaries on WhatsApp','wa')}
+ ${row('info','Help centre','','help')}`}
+function pageHtml(pg){
+ if(pg==='instr')return `${subh('Instructions')}<p class="lead" style="margin-top:6px">Sonic follows these on every call.</p><textarea class="inp" id="ins" data-i="instr" style="min-height:150px;font-size:15px;resize:none" placeholder="e.g. Tell family I'll call back tonight.">${esc(S.instr)}</textarea>
+  <div class="chips">${['Tell family I will call back tonight','Never share my address with unknown callers','Ask delivery partners to leave orders with security'].map(t=>`<button class="chip" data-a="insAdd" data-t="${esc(t)}">+ ${esc(t)}</button>`).join('')}</div><button class="btn" style="margin-top:8px" data-a="insSave">Save</button>`;
+ if(pg==='health')return `${subh('Assistant health check')}${healthHtml()}`;
+ if(pg==='voice')return `${subh('Voice and language')}<div class="cnt" style="margin-top:10px"><b>Languages</b><span id="lcnt">${S.langs.length} of 3 selected</span></div><div class="langs" id="lgs">${langsHtml()}</div><div class="cnt" style="margin-top:18px"><b>Voice</b><span>Tap play to preview</span></div><div id="pv"></div>`;
+ if(pg==='about')return `${subh('About me')}<div class="lbl">Name</div><input class="inp" data-i="name2" style="font-size:15px" value="${esc(S.name)}">
+  <div class="lbl">Home address</div><input class="inp" data-i="addr" data-f="home" style="font-size:15px" placeholder="Flat, building, area" value="${esc(S.addr.home)}">
+  <div class="lbl">Home drop instruction</div><input class="inp" data-i="addr" data-f="homeNote" style="font-size:15px" placeholder="e.g. Hand it to my mother" value="${esc(S.addr.homeNote)}">
+  <div class="lbl">Office address</div><input class="inp" data-i="addr" data-f="office" style="font-size:15px" placeholder="Building, floor, area" value="${esc(S.addr.office)}">
+  <div class="lbl">Office drop instruction</div><input class="inp" data-i="addr" data-f="officeNote" style="font-size:15px" placeholder="e.g. Leave with security" value="${esc(S.addr.officeNote)}">
+  <button class="btn" style="margin-top:16px" data-a="aboutSave">Save</button>`;
+ if(pg==='account')return `${subh('Account data')}<div class="prow"><div style="flex:1"><div class="sm">Your number</div><div class="ct">${esc(S.cc+' '+fmtPhone())||'Not added'}</div></div></div><div class="prow"><div style="flex:1"><div class="sm">Sonic number</div><div class="ct">${SONIC_NUM}</div></div></div>
+  <button class="prow" data-a="dlData"><div style="flex:1" class="ct">Download my data</div>${chev}</button><button class="prow" data-a="delAcc"><div style="flex:1;color:var(--err)" class="ct">Delete account</div>${chev}</button>`;
+ if(pg==='help')return `${subh('Help centre')}<div style="margin-top:10px">${acc('How do I turn Sonic off?','Switch off "Is the AI assistant on?" in Profile. To remove forwarding, dial ##002# on most phones.')}${acc('Sonic missed a call','Run the health check in Profile to see if forwarding is still working.')}${acc('Does Sonic pretend to be me?','No. Sonic always says it is your AI assistant.')}${acc('Change my forwarding code','Go to Assistant health check and tap Fix on call forwarding.')}</div><button class="btn sec" style="margin-top:8px" data-a="support">Contact support</button>`;
+ return ''}
+function healthHtml(){const hs=UI.home.hs;
+ const it=[['Phone number verified',S.otpOk,1],['Call forwarding',S.fwdVerified,9],['Contacts access',S.perm.contacts==='granted',5],['Unknown number detection',S.perm.ident==='granted',5],['Notifications',S.notif==='granted',3]];
+ if(ios())it.push(['Voicemail off',S.vm==='done',8]);it.push(['Assistant is on',S.aiOn,null]);
+ if(hs==='idle')return `<p class="lead" style="margin-top:6px">Check that Sonic is ready to take your calls.</p><button class="btn" data-a="runHealth">Run health check</button>`;
+ if(hs==='running')return `<div class="center" style="padding:40px 0"><span class="spin"></span>Checking</div>`;
+ const bad=it.filter(x=>!x[1]).length;
+ return `<div class="note ${bad?'w':''}" style="margin-top:8px">${svg(bad?'alert':'check')}<span>${bad?bad+' thing'+(bad>1?'s':'')+' to fix':'Everything looks good.'}</span></div>
+ ${it.map(([t,ok,st])=>`<div class="prow"><div style="flex:1" class="ct">${t}</div>${ok?'<span class="stat ok">OK</span>':`<button class="btn sm2 sec" data-a="${st===null?'hTog':'hFix'}" data-k="aiOn" data-s="${st}">Fix</button>`}</div>`).join('')}<button class="btn sec" style="margin-top:12px" data-a="runHealth">Run again</button>`}
+function renderHome(){const h=UI.home;
+ const body=h.chat?chatDetail(h.chat):h.page?pageHtml(h.page):h.tab==='chats'?chatsHtml():profileHtml();
+ const tabs=(!h.chat&&!h.page)?`<div class="tabbar"><button class="tab ${h.tab==='chats'?'on':''}" data-a="hTab" data-k="chats">${svg('msg')}Calls</button><button class="tab ${h.tab==='profile'?'on':''}" data-a="hTab" data-k="profile">${svg('user')}Profile</button></div>`:'';
+ $('#app').innerHTML=`<div class="body" id="body" style="padding:6px 22px 18px">${body}</div>${tabs}`;
+ if(h.page==='voice'){if(!S.langs.includes(S.pvLang))S.pvLang=S.langs[0];drawPv()}}
+
+/* keep iPhone proportions (393x852): scale the whole phone to fit the window */
+function fit(){const f=$('.frame');if(innerWidth<=480){f.style.zoom='';return}const room=innerHeight-$('.pbar').offsetHeight-34;f.style.zoom=Math.min(1,Math.max(.4,room/852))}
+addEventListener('resize',fit);
+/* ---------- progress: 4 phases instead of a step count ---------- */
+const PH=[['Your number',0,2],['Preferences',3,7],['Connect',8,9],['Try it',10,11]];
+function progress(){const n=S.step;return {bar:PH.map(([,a,b])=>{const f=n>b?100:n<a?0:(n-a+1)/(b-a+1)*100;return `<span><i style="width:${f}%"></i></span>`}).join(''),label:''}}
+/* ---------- render ---------- */
+function soft(){const b=$('#body'),y=b?b.scrollTop:0;UI.noanim=true;render();const n=$('#body');if(n)n.scrollTop=y}
+function syncBar(){$$('#plat button').forEach(b=>b.classList.toggle('on',b.dataset.p===S.platform));$('#jump').value=S.home?'home':S.step;$('#expbtn').style.display=(!S.home&&S.step===2&&!S.otpOk)?'':'none'}
+function render(){clearTimers();if(S.home){renderHome();UI.noanim=false;syncBar();save();return}const st=STEPS[S.step],v=st.view();
+ $('#app').innerHTML=`<div class="top"><div class="trow"><button class="bk" data-a="back" ${S.step?'':'disabled'} aria-label="Back">${svg('back')}</button><div class="trk">${progress().bar}</div></div></div>
+ <div class="body ${UI.noanim?'':UI.dir>0?'r':'l'}" id="body">${v.body}</div><div class="foot" id="foot">${v.foot||''}</div>`;
+ syncBar();
+ UI.noanim=false;v.mount&&v.mount();save()}
+
+/* ---------- actions ---------- */
+const A={
+ next:()=>go(S.step+1),back:()=>go(S.step-1),
+ how:()=>sheet(`<h2 style="font-size:19px">How it works</h2><ol class="steps"><li><div>A call comes in and your phone forwards it to Sonic.<small>Only the calls you choose.</small></div></li><li><div>Sonic answers as your AI assistant.<small>It never pretends to be you.</small></div></li><li><div>You get a short summary.<small>Who called, what they needed, what to do next.</small></div></li></ol>`),
+ closeOv:()=>$('#ov').innerHTML='',
+ phoneNext:()=>{const d=S.phone.replace(/\D/g,''),e=$('#perr');let m='';
+  if(!d)m='Enter your mobile number.';
+  else if(S.cc==='+91'){if(d.length!==10)m=`Mobile numbers in India have 10 digits. You entered ${d.length}.`;else if(!/^[6-9]/.test(d))m='Indian mobile numbers start with 6, 7, 8 or 9.'}
+  else if(d.length<6||d.length>12)m='Enter a valid number, between 6 and 12 digits.';
+  if(m){e.textContent=m;$('#pf').classList.add('bad');return}
+  if(S.verifiedFor!==S.cc+S.phone)S.otpOk=false;UI.otp=null;go(2)},
+ expire:()=>{if(S.otpOk||!UI.otp)return;UI.otp.exp=Date.now()-1;UI.otp.auto=false;UI.otp.st='expired';drawOtp()},
+ resend:()=>{const o=UI.otp;if(o.resend>Date.now()){toast('Please wait for the countdown');return}otpStart();$('#smsb').innerHTML='';drawOtp();schedAuto();toast('New code requested (simulated)')},
+ notifAsk:()=>dialog('notif',ok=>{S.notif=ok?'granted':'denied';go(S.step+1)}),notifLater:()=>{S.notif='later';go(S.step+1)},
+ nameNext:()=>{const n=S.name.trim(),e=$('#nerr');if(n.length<2){e.textContent='Please enter at least 2 letters.';$('#nm').classList.add('bad');return}
+  if(!/^[\p{L}][\p{L} .'’]*$/u.test(n)){e.textContent='Use letters only, please.';$('#nm').classList.add('bad');return}S.name=n;go(S.step+1)},
+ mode:(el)=>{S.mode=el.dataset.k;soft()},
+ promo:(el)=>{const k=el.dataset.k;S.promo[k]=!S.promo[k];$('#promo').innerHTML=promoHtml();save()},
+ modeNext:()=>{if(!S.mode){toast('Choose how Sonic handles your calls');return}
+  const askRole=()=>(ios()?guide:(cb)=>dialog('role',cb))(ok=>{S.perm.ident=ok?'granted':'denied';go(S.step+1)});
+  if(S.perm.contacts==='granted'){askRole();return}
+  dialog('contacts',ok=>{S.perm.contacts=ok?'granted':'denied';S.permWarn=!ok;if(ok)askRole();else soft()})},
+ lang:(el)=>{const k=el.dataset.k,i=S.langs.indexOf(k);if(i>=0)S.langs.splice(i,1);else if(S.langs.length>=3){toast('Up to 3 languages. Tap one to remove it.');return}else S.langs.push(k);
+  $('#lgs').innerHTML=langsHtml();$('#lcnt').textContent=`${S.langs.length} of 3 selected`;if(S.langs.length&&!S.langs.includes(S.pvLang))S.pvLang=S.langs[0];if($('#pv'))drawPv();save()},
+ langNext:()=>{if(!S.langs.length){toast('Pick at least one language');return}if(S.voice&&!VOICES[S.voice].sup.some(l=>S.langs.includes(l)))S.voice=null;go(S.step+1)},
+ gotoLang:()=>go(6),
+ voice:(el)=>{S.voice=el.dataset.k;S.voiceOk=false;soft()},
+ vNext:()=>{if(!S.voice){toast('Choose a voice first');return}go(S.step+1)},
+ pvLang:(el)=>{stopPv();S.pvLang=el.dataset.k;soft()},pickV:(el)=>{if(S.voice!==el.dataset.k){S.voice=el.dataset.k;S.voiceOk=!!S.home;drawPv()}},
+ play:(el,ev)=>{ev.stopPropagation();playPv(el.dataset.k)},
+ pvOk:()=>{if(!S.voice){toast('Tap a voice to select it');return}S.voiceOk=true;go(S.step+1)},
+ vmDone:()=>{S.vm='done';go(S.step+1)},vmSkip:()=>{S.vm='skipped';go(S.step+1)},
+ acc:(el)=>el.parentElement.classList.toggle('o'),
+ how2:()=>sheet(`<h2 style="font-size:19px">Show me how</h2><div class="tabs" id="tb"><button class="on" data-a="tab" data-t="0">Check</button><button data-a="tab" data-t="1">Switch off</button><button data-a="tab" data-t="2">Return</button></div><div id="tbc"></div>`) || A.tab({dataset:{t:0}}),
+ tab:(el)=>{const t=+el.dataset.t;$$('#tb button').forEach((b,i)=>b.classList.toggle('on',i===t));
+  const c=[`<div class="mini"><b style="font-size:15px">Voicemail</b><div class="r h"><span>Greeting</span><span>Set Up Now</span></div><div class="r"><span>Messages</span><span>0</span></div><p class="sm" style="margin-top:10px">Open the Phone app, tap Voicemail, and see if it is active.</p></div>`,
+   `<div class="mini"><b style="font-size:15px">Carrier services</b><div class="r"><span>Call forwarding</span><span>›</span></div><div class="r h"><span>Voicemail</span><span>On ›</span></div><div class="r"><span>Call waiting</span><span>On</span></div><p class="sm" style="margin-top:10px">Find voicemail in Settings or your carrier's app, or ask your carrier.</p></div>`,
+   `<div class="mini"><div class="center"><span class="orb lg" style="display:inline-block"></span><div class="ct" style="margin-top:8px">Back in Sonic</div><div class="sm">Tap Done, continue</div></div></div>`][t];$('#tbc').innerHTML=c},
+ copyNum:async()=>{const ok=await copyText(SONIC_NUM);UI.clip=SONIC_RAW;UI.c1=true;toast(ok?'Number copied':'Copy blocked. Press and hold the number to copy');soft()},
+ copyCode:async()=>{const ok=await copyText(dialStr());UI.clip=dialStr();UI.c1=true;toast(ok?'Code copied':'Copy blocked. Select the code to copy');soft();if(S.dialed!=='ok')later(()=>openDialer(),900)},
+ saveCode:()=>{const v=$('#ce').value.trim();if(v&&!/^[*#0-9]+\*?$/.test(v)){toast('Use only digits, * and #');return}S.codeOverride=v;S.dialed=null;$('#ov').innerHTML='';soft()},
+ openDial:()=>openDialer(),closeDial:()=>{$('#ov').innerHTML='';soft()},
+ showPaste:()=>{UI.dial.menu=!UI.dial.menu;drawDialer()},
+ paste:(el,ev)=>{ev&&ev.stopPropagation();UI.dial.menu=false;if(!UI.clip){toast('Clipboard is empty. Copy the code first');drawDialer();return}UI.dial.val+=UI.clip;drawDialer()},
+ dialDel:()=>{UI.dial.val=UI.dial.val.slice(0,-1);drawDialer()},dialGo:()=>dialGo(),
+ dialOk:()=>{const ok=UI.dial.res.ok;UI.dial.st='idle';$('#ov').innerHTML='';soft();if(ok)toast('Back in Sonic')},
+ fwdDone:()=>{S.fwdConfirmed=true;S.fwdSkipped=false;soft()},
+ fwdSkip:()=>{S.fwdSkipped=true;go(S.step+1)},
+ retry:()=>{S.dialed=null;S.fwdConfirmed=false;S.fwdVerified=false;UI.c1=false;render();$('#body').scrollTop=0},
+ help:()=>sheet(`<h2 style="font-size:19px">Need help?</h2>${acc('Dialer says "invalid code"','Check you pasted the whole code. Some carriers use a different one, see below.')}${acc('Nothing happened','Wait a few seconds for the carrier message. Check your signal and try again.')}${acc('My carrier uses a different code',`<input class="inp" id="ce" style="font-size:15px;margin:6px 0" placeholder="Prefix, e.g. **21*" value="${esc(S.codeOverride)}"><button class="btn sec sm2" data-a="saveCode">Save</button>`)}${acc('Turn forwarding off','On most phones, dial ##002# to cancel all forwarding.')}`),
+ testCall:()=>{$('#tc').innerHTML=`<div><span class="spin"></span>Sonic is calling your number (simulated)</div>`;const b=$('#foot .btn');if(b)b.disabled=true;
+  later(()=>{if(S.dialed==='ok'){S.fwdConfirmed=true;S.fwdVerified=true;$('#tc').innerHTML='<span class="stat ok">Verified (simulated)</span>';later(()=>go(S.step+1),900)}else{$('#tc').innerHTML=`<div class="note e" style="margin:0">${svg('alert')}<span>Test call didn't come through. Dial the code in the dialer, then try again.</span></div>`;const b2=$('#foot .btn');if(b2)b2.disabled=false}},2200)},
+ demoStart:()=>{const D=UI.demo,el=$('#demo');if(D.on||!el)return;el.className='exit';
+  later(()=>{D.on=true;D.ended=false;D.msgs=[{t:`Hi ${S.name?S.name.split(' ')[0]:'there'}, I'm Sonic, your AI assistant. What would you like to ask?`}];D.t0=Date.now();D.topics=[];drawDemo();el.className='enter'},380)},
+ starter:(el)=>ask(el.dataset.t),dsend:()=>{const i=$('#dq');if(!i.value.trim()){toast('Type something first');return}const v=i.value;i.value='';ask(v)},
+ demoEnd:()=>{const D=UI.demo;if(!D.topics.length){toast('Ask Sonic something first');return}D.ended=true;S.demoDone=true;save();drawDemo();pushNotif()},
+ demoMore:()=>{UI.demo.ended=false;$('#push').innerHTML='';drawDemo()},demoReset:()=>{Object.assign(UI.demo,{on:false,msgs:[],ended:false,topics:[]});$('#push').innerHTML='';drawDemo();later(()=>A.demoStart(),1500)},
+ demoVoice:()=>{UI.demo.voice=!UI.demo.voice;try{speechSynthesis.cancel()}catch(e){}toast(UI.demo.voice?'Sonic will speak replies if your device has a voice':'Voice replies off');drawDemo()},
+ mic:()=>{const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){toast("Mic input isn't supported here. Type instead.");return}try{const r=new R();r.lang='en-IN';r.onresult=e=>{const t=e.results[0][0].transcript;ask(t)};r.onerror=()=>toast("Couldn't use the mic here. Type instead.");r.start();toast('Listening...')}catch(e){toast("Couldn't use the mic here. Type instead.")}},
+ addr:()=>sheet(`<h2 style="font-size:19px">Add delivery spots</h2><p class="sm" style="margin-bottom:8px">Sonic shares these only with delivery partners.</p>
+  <div class="lbl">Home address</div><input class="inp" style="font-size:15px" data-i="addr" data-f="home" placeholder="Flat, building, area" value="${esc(S.addr.home)}">
+  <div class="lbl">Home drop instruction</div><input class="inp" style="font-size:15px" data-i="addr" data-f="homeNote" placeholder="e.g. Hand it to my mother" value="${esc(S.addr.homeNote)}">
+  <div class="lbl">Office address</div><input class="inp" style="font-size:15px" data-i="addr" data-f="office" placeholder="Building, floor, area" value="${esc(S.addr.office)}">
+  <div class="lbl">Office drop instruction</div><input class="inp" style="font-size:15px" data-i="addr" data-f="officeNote" placeholder="e.g. Leave with security" value="${esc(S.addr.officeNote)}">
+  <button class="btn" style="margin-top:14px" data-a="addrSave">Save</button>`),
+ addrSave:()=>{$('#ov').innerHTML='';save();drawDemo();toast('Saved. Sonic can use this for deliveries')},
+ goto:(el)=>go(+el.dataset.s),fixFirst:()=>{const r=status();if(r.length)go(r[0].step)},
+
+ openHome:()=>{S.home=true;S.aiOn=true;S.incomplete=false;UI.home={tab:'chats',page:null,chat:null,f:'All',hs:'idle'};render()},
+ skipHome:()=>{S.home=true;S.aiOn=false;S.incomplete=true;UI.home={tab:'profile',page:null,chat:null,f:'All',hs:'idle'};render()},
+ hTab:(el)=>{UI.home.tab=el.dataset.k;UI.home.page=null;UI.home.chat=null;render()},
+ hOpen:(el)=>{UI.home.page=el.dataset.k;if(el.dataset.k==='health')UI.home.hs='idle';render()},
+ hBack:()=>{stopPv();if(UI.home.chat)UI.home.chat=null;else UI.home.page=null;render()},
+ hChat:(el)=>{UI.home.chat=+el.dataset.k;render()},hFilter:(el)=>{UI.home.f=el.dataset.k;soft()},
+ hTog:(el)=>{const k=el.dataset.k;S[k]=!S[k];if(k==='aiOn')toast(S.aiOn?'Sonic is on':'Sonic is off. Calls ring as usual');soft()},
+ hFix:(el)=>{go(+el.dataset.s)},
+ runHealth:()=>{UI.home.hs='running';render();later(()=>{UI.home.hs='done';render()},1400)},
+ insAdd:(el)=>{S.instr=(S.instr?S.instr+'\n':'')+el.dataset.t+'.';soft()},insSave:()=>{save();toast('Instructions saved')},aboutSave:()=>{save();toast('Saved')},
+ dlData:()=>toast('Data request sent (simulated)'),support:()=>toast('Support chat opens here (simulated)'),
+ delAcc:()=>sheet(`<h2 style="font-size:19px">Delete account?</h2><p class="sm" style="margin:6px 0 12px">This resets the prototype to the start.</p><button class="btn" data-a="restartAll">Delete account</button>`),
+ restartAll:()=>{S=DEF();UI.home={tab:'chats',page:null,chat:null,f:'All',hs:'idle'};$('#ov').innerHTML='';UI.otp=null;UI.c1=false;UI.demo={on:false,msgs:[],ended:false,typing:false,voice:false,t0:0,topics:[]};go(0)}
+};
+const H={cc:el=>{S.cc=el.value;save()},phone:el=>{let d=el.value.replace(/\D/g,'');d=d.slice(0,S.cc==='+91'?10:12);S.phone=d;el.value=fmtPhone();$('#perr').textContent='';$('#pf').classList.remove('bad')},
+ name:el=>{S.name=el.value;$('#nerr').textContent='';el.classList.remove('bad');$('#nprev').textContent=`Hi ${S.name.trim()?S.name.trim().split(' ')[0]:'there'}, I'm Sonic, your AI assistant.`},
+ addr:el=>{S.addr[el.dataset.f]=el.value},name2:el=>{S.name=el.value},instr:el=>{S.instr=el.value}};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(t&&A[t.dataset.a]){if(t.tagName==='A')return;A[t.dataset.a](t,e)}else{const k=e.target.closest('.kp [data-k]');if(k){UI.dial.val+=k.dataset.k;drawDialer()}}});
+document.addEventListener('input',e=>{const t=e.target.closest('[data-i]');if(t&&H[t.dataset.i])H[t.dataset.i](t)});
+document.addEventListener('change',e=>{if(e.target.id==='cc')H.cc(e.target)});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='dq')A.dsend();if(e.key==='Enter'&&e.target.id==='ph')A.phoneNext();if(e.key==='Enter'&&e.target.id==='nm')A.nameNext()});
+$('#jump').innerHTML=STEPS.map((s,i)=>`<option value="${i}">${i+1}. ${s.t}</option>`).join('')+'<option value="home">Home (after setup)</option>';
+$('#jump').onchange=e=>{e.target.value==='home'?A.openHome():go(+e.target.value)};
+$('#plat').onclick=e=>{const b=e.target.closest('button');if(b){S.platform=b.dataset.p;if(STEPS[S.step].iosOnly&&!ios())go(S.step+1);else render()}};
+$('#restart').onclick=()=>{try{localStorage.removeItem(KEY)}catch(e){}A.restartAll()};
+S.step=Math.min(S.step,TOTAL-1);if(STEPS[S.step].iosOnly&&!ios())S.step++;if(S.finished!==undefined)delete S.finished;fit();render();
+</script>
+</body>
+</html>
